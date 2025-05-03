@@ -1,0 +1,7 @@
+{
+  "name": "my-website",
+  "compatibility_date": "2023-05-03",
+  "assets": {
+    "directory": "./"
+  }
+}
