@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <title>تسجيل الاسم</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <form id="registrationForm">
+        <h2>تسجيل الاسم</h2>
+        <input type="text" id="username" placeholder="أدخل اسمك" required>
+        <button type="submit">تسجيل</button>
+        <div id="message" class="message"></div>
+    </form>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const messageEl = document.getElementById('message');
+            
+            if (!username) {
+                showMessage('يرجى إدخال اسم', 'error');
+                return;
+            }
+            
+            // إعدادات GitHub API
+            const owner = 'louabnes123'; // اسم المستخدم الخاص بك على GitHub
+            const repo = 'zabobi'; // اسم المستودع الخاص بك
+            const path = `users/${username}.txt`; // مسار الملف الذي سيتم إنشاؤه
+            const message = `تسجيل مستخدم جديد: ${username}`; // رسالة الـ commit
+            const content = btoa(`اسم المستخدم: ${username}\nتاريخ التسجيل: ${new Date().toISOString()}`); // محتوى الملف بتشفير Base64
+            const token = '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'; // رمز الوصول الخاص بك
+            
+            // إرسال البيانات إلى GitHub API
+            fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    content: content
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`حدث خطأ: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                showMessage('تم تسجيل الاسم بنجاح!', 'success');
+                document.getElementById('username').value = '';
+                
+                // يمكنك إضافة توجيه المستخدم إلى صفحة أخرى هنا إذا أردت
+                // window.location.href = 'success.html';
+            })
+            .catch(error => {
+                showMessage(`فشل في تسجيل الاسم: ${error.message}`, 'error');
+                console.error('Error:', error);
+            });
+        });
+        
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            
+            // إخفاء الرسالة بعد 5 ثوانٍ
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
