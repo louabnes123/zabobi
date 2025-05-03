@@ -67,6 +67,13 @@
     </form>
 
     <script>
+        // وظيفة لتشفير النص إلى Base64 مع دعم الأحرف غير ASCII
+        function utf8ToBase64(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+                return String.fromCharCode('0x' + p1);
+            }));
+        }
+        
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -83,7 +90,11 @@
             const repo = 'zabobi'; // اسم المستودع الخاص بك
             const path = `users/${username}.txt`; // مسار الملف الذي سيتم إنشاؤه
             const message = `تسجيل مستخدم جديد: ${username}`; // رسالة الـ commit
-            const content = btoa(`اسم المستخدم: ${username}\nتاريخ التسجيل: ${new Date().toISOString()}`); // محتوى الملف بتشفير Base64
+            
+            // استخدام الوظيفة المحسنة لتشفير النص العربي
+            const fileContent = `اسم المستخدم: ${username}\nتاريخ التسجيل: ${new Date().toISOString()}`;
+            const content = utf8ToBase64(fileContent);
+            
             const token = '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'; // رمز الوصول الخاص بك
             
             // إرسال البيانات إلى GitHub API
@@ -100,16 +111,15 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`حدث خطأ: ${response.status}`);
+                    return response.json().then(err => {
+                        throw new Error(`حدث خطأ: ${response.status} - ${err.message}`);
+                    });
                 }
                 return response.json();
             })
             .then(data => {
                 showMessage('تم تسجيل الاسم بنجاح!', 'success');
                 document.getElementById('username').value = '';
-                
-                // يمكنك إضافة توجيه المستخدم إلى صفحة أخرى هنا إذا أردت
-                // window.location.href = 'success.html';
             })
             .catch(error => {
                 showMessage(`فشل في تسجيل الاسم: ${error.message}`, 'error');
