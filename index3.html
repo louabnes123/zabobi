@@ -13,13 +13,16 @@
             background-color: #f5f5f5;
             direction: rtl;
         }
+        .container {
+            width: 80%;
+            max-width: 600px;
+        }
         form {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 300px;
-            text-align: center;
+            margin-bottom: 20px;
         }
         input {
             width: 100%;
@@ -56,75 +59,87 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .registered-users {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .user-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
-    <form id="registrationForm">
-        <h2>تسجيل الاسم</h2>
-        <input type="text" id="username" placeholder="أدخل اسمك" required>
-        <button type="submit">تسجيل</button>
-        <div id="message" class="message"></div>
-    </form>
+    <div class="container">
+        <form id="registrationForm">
+            <h2>تسجيل الاسم</h2>
+            <input type="text" id="username" placeholder="أدخل اسمك" required>
+            <button type="submit">تسجيل</button>
+            <div id="message" class="message"></div>
+        </form>
+        
+        <div class="registered-users">
+            <h3>الأسماء المسجلة:</h3>
+            <div id="usersList"></div>
+        </div>
+    </div>
 
     <script>
-        // وظيفة لتشفير النص إلى Base64 مع دعم الأحرف غير ASCII
-        function utf8ToBase64(str) {
-            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-                return String.fromCharCode('0x' + p1);
-            }));
+        // تحميل الأسماء المسجلة محليًا
+        function loadLocalUsers() {
+            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+            
+            if (users.length === 0) {
+                usersList.innerHTML = '<p>لا توجد أسماء مسجلة بعد.</p>';
+                return;
+            }
+            
+            // ترتيب المستخدمين بحسب تاريخ التسجيل (الأحدث أولاً)
+            users.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.textContent = `${user.name} - ${new Date(user.date).toLocaleString()}`;
+                usersList.appendChild(div);
+            });
         }
+        
+        // حفظ المستخدم محليًا
+        function saveUserLocally(username) {
+            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+            users.push({
+                name: username,
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('registeredUsers', JSON.stringify(users));
+            loadLocalUsers();
+        }
+        
+        // تحميل الأسماء عند بدء الصفحة
+        loadLocalUsers();
         
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
-            const messageEl = document.getElementById('message');
             
             if (!username) {
                 showMessage('يرجى إدخال اسم', 'error');
                 return;
             }
             
-            // إعدادات GitHub API
-            const owner = 'louabnes123'; // اسم المستخدم الخاص بك على GitHub
-            const repo = 'zabobi'; // اسم المستودع الخاص بك
-            const path = `users/${username}.txt`; // مسار الملف الذي سيتم إنشاؤه
-            const message = `تسجيل مستخدم جديد: ${username}`; // رسالة الـ commit
-            
-            // استخدام الوظيفة المحسنة لتشفير النص العربي
-            const fileContent = `اسم المستخدم: ${username}\nتاريخ التسجيل: ${new Date().toISOString()}`;
-            const content = utf8ToBase64(fileContent);
-            
-            const token = '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'; // رمز الوصول الخاص بك
-            
-            // إرسال البيانات إلى GitHub API
-            fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: message,
-                    content: content
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(`حدث خطأ: ${response.status} - ${err.message}`);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                showMessage('تم تسجيل الاسم بنجاح!', 'success');
-                document.getElementById('username').value = '';
-            })
-            .catch(error => {
-                showMessage(`فشل في تسجيل الاسم: ${error.message}`, 'error');
-                console.error('Error:', error);
-            });
+            // حفظ المستخدم محليًا
+            saveUserLocally(username);
+            showMessage('تم تسجيل الاسم بنجاح!', 'success');
+            document.getElementById('username').value = '';
         });
         
         function showMessage(text, type) {
@@ -133,10 +148,10 @@
             messageEl.className = `message ${type}`;
             messageEl.style.display = 'block';
             
-            // إخفاء الرسالة بعد 5 ثوانٍ
+            // إخفاء الرسالة بعد 3 ثوانٍ
             setTimeout(() => {
                 messageEl.style.display = 'none';
-            }, 5000);
+            }, 3000);
         }
     </script>
 </body>
